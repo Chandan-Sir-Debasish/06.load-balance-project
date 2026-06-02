@@ -1,0 +1,197 @@
+/* Modern CSS Reset (partial) */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+  color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem 1rem;
+}
+
+.container {
+  width: 100%;
+  max-width: 650px;
+  background: rgba(255, 255, 255, 0.95);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  padding: 2.5rem;
+  transition: all 0.3s ease;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.server-badge {
+  display: inline-block;
+  background: #ecf0f1;
+  color: #2c3e50;
+  padding: 0.4rem 1.2rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 1.8rem;
+  text-align: center;
+  width: 100%;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+form {
+  display: flex;
+  gap: 0.8rem;
+  margin-bottom: 2rem;
+}
+
+input[type="text"] {
+  flex: 1;
+  padding: 0.9rem 1.2rem;
+  border: 2px solid #dfe6e9;
+  border-radius: 30px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+input[type="text"]:focus {
+  border-color: #0984e3;
+  box-shadow: 0 0 0 3px rgba(9, 132, 227, 0.15);
+}
+
+button {
+  padding: 0.9rem 2rem;
+  background: #0984e3;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.15s;
+  box-shadow: 0 4px 10px rgba(9, 132, 227, 0.3);
+}
+
+button:hover {
+  background: #0767b3;
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 6px rgba(9, 132, 227, 0.3);
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.2rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  margin-bottom: 0.8rem;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+li:hover {
+  background: #f1f2f6;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+}
+
+li span {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+li button {
+  background: #e74c3c;
+  box-shadow: 0 3px 8px rgba(231, 76, 60, 0.3);
+  padding: 0.5rem 1.2rem;
+  font-size: 0.85rem;
+}
+
+li button:hover {
+  background: #c0392b;
+}
+
+.algo-switcher {
+  background: #f1f2f6;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.algo-switcher p {
+  margin-bottom: 0.8rem;
+  font-weight: 500;
+}
+
+.algo-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.algo-buttons button {
+  background: #636e72;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+}
+
+.algo-buttons button:hover {
+  background: #2d3436;
+}
+
+li div {
+  display: flex;
+  flex-direction: column;
+}
+
+.task-title {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.task-meta {
+  font-size: 0.8rem;
+  color: #636e72;
+  margin-top: 0.2rem;
+}
+
+@media (max-width: 500px) {
+  .container {
+    padding: 1.8rem;
+  }
+
+  form {
+    flex-direction: column;
+  }
+
+  button {
+    width: 100%;
+  }
+}

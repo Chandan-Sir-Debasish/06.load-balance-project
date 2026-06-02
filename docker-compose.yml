@@ -1,0 +1,105 @@
+version: "3.8"
+
+services:
+  # MongoDB database
+  mongo:
+    image: mongo:7
+    container_name: mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - app_network
+
+  # First backend instance
+  backend-1:
+    build: ./backend
+    container_name: backend-1
+    hostname: backend-1 # Set hostname for better logging and identification
+    restart: unless-stopped
+    environment:
+      - PORT=3000
+      - MONGO_URI=mongodb://mongo:27017/loadbalancertest
+    depends_on:
+      - mongo
+    networks:
+      - app_network
+
+  # Second backend instance
+  backend-2:
+    build: ./backend
+    container_name: backend-2
+    hostname: backend-2 # Set hostname for better logging and identification
+    restart: unless-stopped
+    environment:
+      - PORT=3000
+      - MONGO_URI=mongodb://mongo:27017/loadbalancertest
+    depends_on:
+      - mongo
+    networks:
+      - app_network
+
+  # Third backend instance
+  backend-3:
+    build: ./backend
+    container_name: backend-3
+    hostname: backend-3 # Set hostname for better logging and identification
+    restart: unless-stopped
+    environment:
+      - PORT=3000
+      - MONGO_URI=mongodb://mongo:27017/loadbalancertest
+    depends_on:
+      - mongo
+    networks:
+      - app_network
+
+  # Frontend build service (runs once and exits)
+  frontend-builder:
+    build: ./frontend
+    container_name: frontend-builder
+    command: sh -c "npm run build"
+    volumes:
+      - frontend_dist:/app/dist # The built output goes into this volume
+    networks:
+      - app_network
+
+  # Nginx load balancer and static file server
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro # custom config
+      - frontend_dist:/usr/share/nginx/html # served frontend
+    depends_on:
+      - backend-1
+      - backend-2
+      - backend-3
+      - frontend-builder
+    networks:
+      - app_network
+
+  # ================== NEW SERVICE ==================
+  lb-manager:
+    build: ./management
+    container_name: lb-manager
+    restart: unless-stopped
+    ports:
+      - "3001:3000" # Expose API on port 3001
+    volumes:
+      - ./nginx:/nginx-config # Writable – this lets us overwrite nginx.conf
+      - /var/run/docker.sock:/var/run/docker.sock # Required for docker exec
+    networks:
+      - app_network
+    depends_on:
+      - nginx
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  mongo_data:
+  frontend_dist:
