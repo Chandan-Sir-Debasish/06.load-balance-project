@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import "./App.css";
 
 function App() {
   const [tasks, setTasks] = useState([]);
@@ -10,7 +11,7 @@ function App() {
     const res = await fetch("/api/tasks");
     const data = await res.json();
     setTasks(data.tasks);
-    setServerInfo(`Served by server on port ${data.server}`);
+    setServerInfo(data.server);
   };
 
   const addTask = async (e) => {
@@ -22,7 +23,7 @@ function App() {
       body: JSON.stringify({ title }),
     });
     const data = await res.json();
-    setServerInfo(`Served by server on port ${data.server}`);
+    setServerInfo(data.server);
     setTitle("");
     fetchTasks();
   };
@@ -30,7 +31,7 @@ function App() {
   const deleteTask = async (id) => {
     const res = await fetch(`/api/tasks/${id}`, { method: "DELETE" });
     const data = await res.json();
-    setServerInfo(`Served by server on port ${data.server}`);
+    setServerInfo(data.server);
     fetchTasks();
   };
 
@@ -91,6 +92,7 @@ function App() {
 
       <form onSubmit={addTask}>
         <input
+          type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="New task title"

@@ -1,0 +1,35 @@
+flowchart TD
+    subgraph Client_Space ["Client Space"]
+        Client["Browser Client"]
+    end
+
+    subgraph Entrance ["Port 80 - Entrance"]
+        Nginx["Nginx Reverse Proxy & Load Balancer"]
+    end
+
+    subgraph Internal_Network ["Internal Network (app_network)"]
+        Frontend["Frontend Static Content (Vite Build)"]
+        
+        subgraph Backend_Pool ["Backend Upstream Pool"]
+            B1["backend-1:3000"]
+            B2["backend-2:3000"]
+            B3["backend-3:3000"]
+        end
+
+        DB[("MongoDB (Shared Database:27017)")]
+    end
+
+    subgraph Management_Control ["Management System"]
+        Manager["LB Manager (lb-manager:3001)"]
+        DockerSocket["Host Docker Socket (/var/run/docker.sock)"]
+    end
+
+    Client -->|HTTP port:80| Nginx
+    Nginx -.->|Serves Frontend Assets| Frontend
+    Nginx -->|Balances Requests /api/| Backend_Pool
+    B1 & B2 & B3 ===>|Persists Tasks| DB
+    
+    Client -->|Switches Balancing Algorithm| Manager
+    Manager ===>|Overwrites nginx.conf file| Nginx
+    Manager ===>|Docker Exec reload command| DockerSocket
+    DockerSocket -.->|Sends reload signal| Nginx

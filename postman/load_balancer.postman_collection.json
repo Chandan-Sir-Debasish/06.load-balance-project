@@ -1,0 +1,363 @@
+{
+	"info": {
+		"_postman_id": "8f8b8a8e-cfbe-4299-a9a3-cce393ff80e1",
+		"name": "Nginx Load Balancer Collection",
+		"description": "API requests to test the Task Manager Backend (routed through Nginx load balancer) and the Load Balancer Management API.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Task API",
+			"item": [
+				{
+					"name": "Get Tasks",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains server node and task list\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('tasks');",
+									"    pm.expect(jsonData).to.have.property('server');",
+									"    console.log(\"Request served by Nginx upstream node: \" + jsonData.server);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tasks"
+							]
+						},
+						"description": "Fetch list of tasks from the backend cluster. Nginx will distribute this request to backend-1, backend-2, or backend-3 depending on the active balancing algorithm."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Task",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Extract and store task ID\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('task');",
+									"    pm.expect(jsonData.task).to.have.property('_id');",
+									"    pm.environment.set(\"lastTaskId\", jsonData.task._id);",
+									"    console.log(\"Saved lastTaskId: \" + jsonData.task._id);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Postman Integration Task #{{$randomInt}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tasks"
+							]
+						},
+						"description": "Create a new task. The request goes to a distributed backend node, which stores it in MongoDB and flags the creation source with its host identifier."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Task",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks/{{lastTaskId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tasks",
+								"{{lastTaskId}}"
+							]
+						},
+						"description": "Delete the recently created task using the dynamic variable set by the Create Task test."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Management API",
+			"item": [
+				{
+					"name": "Get Current Algorithm",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Check active algorithm property\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('algorithm');",
+									"    console.log(\"Nginx active upstream algorithm: \" + jsonData.algorithm);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{managerUrl}}/current-algorithm",
+							"host": [
+								"{{managerUrl}}"
+							],
+							"path": [
+								"current-algorithm"
+							]
+						},
+						"description": "Queries the LB management node to read Nginx configuration and detect the current upstream algorithm."
+					},
+					"response": []
+				},
+				{
+					"name": "Switch Algorithm (Round Robin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successfully switched algorithm\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.message).to.contain(\"roundrobin\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"algorithm\": \"roundrobin\"\n}"
+						},
+						"url": {
+							"raw": "{{managerUrl}}/switch-algorithm",
+							"host": [
+								"{{managerUrl}}"
+							],
+							"path": [
+								"switch-algorithm"
+							]
+						},
+						"description": "Switch Nginx load balancing upstream algorithm to Round Robin."
+					},
+					"response": []
+				},
+				{
+					"name": "Switch Algorithm (Least Connections)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successfully switched algorithm\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.message).to.contain(\"leastconn\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"algorithm\": \"leastconn\"\n}"
+						},
+						"url": {
+							"raw": "{{managerUrl}}/switch-algorithm",
+							"host": [
+								"{{managerUrl}}"
+							],
+							"path": [
+								"switch-algorithm"
+							]
+						},
+						"description": "Switch Nginx load balancing upstream algorithm to Least Connections."
+					},
+					"response": []
+				},
+				{
+					"name": "Switch Algorithm (IP Hash)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successfully switched algorithm\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.message).to.contain(\"iphash\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"algorithm\": \"iphash\"\n}"
+						},
+						"url": {
+							"raw": "{{managerUrl}}/switch-algorithm",
+							"host": [
+								"{{managerUrl}}"
+							],
+							"path": [
+								"switch-algorithm"
+							]
+						},
+						"description": "Switch Nginx load balancing upstream algorithm to IP Hash."
+					},
+					"response": []
+				},
+				{
+					"name": "Switch Algorithm (Weighted)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successfully switched algorithm\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.message).to.contain(\"weighted\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"algorithm\": \"weighted\"\n}"
+						},
+						"url": {
+							"raw": "{{managerUrl}}/switch-algorithm",
+							"host": [
+								"{{managerUrl}}"
+							],
+							"path": [
+								"switch-algorithm"
+							]
+						},
+						"description": "Switch Nginx load balancing upstream algorithm to Weighted Round Robin (backend-1 weight=3, others weight=1)."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
