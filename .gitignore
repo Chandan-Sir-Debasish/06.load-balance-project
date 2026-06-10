@@ -3,6 +3,7 @@
 
 # Exclude README.md from being ignored (allow only README.md)
 !README.md
+!report.md
 
 # Node.js
 node_modules/
